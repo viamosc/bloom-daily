@@ -1,0 +1,58 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  --color-paper: #f6f5f1;
+  --color-surface: #ffffff;
+  --color-ink: #201e1a;
+  --color-ink-muted: #746e60;
+  --color-ink-faint: #a39c8c;
+  --color-line: #e3ded2;
+  --color-accent: #33513f;
+  --color-accent-ink: #ffffff;
+  --color-accent-soft: #e6ede8;
+  --color-rust: #a94e2c;
+  --color-rust-soft: #f4e4dc;
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-plex);
+}
+
+html,
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+body {
+  font-family: var(--font-body);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+::selection {
+  background: var(--color-accent-soft);
+}
+
+input,
+textarea {
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+textarea:focus,
+input:focus,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
