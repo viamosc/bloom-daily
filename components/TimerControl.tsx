@@ -28,7 +28,7 @@ export function TimerControl({ running }: { running: TimeEntry | null }) {
   if (running) {
     return (
       <div
-        className="flex items-center justify-between rounded-md px-4 py-3.5 mb-8"
+        className="flex flex-wrap items-center justify-between gap-3 rounded-md px-4 py-3.5 mb-8"
         style={{ background: "var(--color-accent-soft)" }}
       >
         <div>
@@ -43,7 +43,7 @@ export function TimerControl({ running }: { running: TimeEntry | null }) {
         <button
           type="button"
           onClick={() => startTransition(() => endTimeEntry(running.id))}
-          className="flex items-center gap-1.5 rounded-md px-3.5 py-2 text-sm font-medium"
+          className="flex items-center gap-1.5 rounded-md px-3.5 py-2 text-sm font-medium shrink-0"
           style={{ background: "var(--color-accent)", color: "var(--color-accent-ink)" }}
         >
           <Square size={13} fill="currentColor" />
@@ -55,7 +55,7 @@ export function TimerControl({ running }: { running: TimeEntry | null }) {
 
   return (
     <form
-      className="flex items-center gap-2 mb-8"
+      className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-8"
       onSubmit={(e) => {
         e.preventDefault();
         if (!title.trim()) return;
@@ -76,7 +76,7 @@ export function TimerControl({ running }: { running: TimeEntry | null }) {
       />
       <button
         type="submit"
-        className="flex items-center gap-1.5 rounded-md px-3.5 py-2.5 text-sm font-medium shrink-0"
+        className="flex items-center justify-center gap-1.5 rounded-md px-3.5 py-2.5 text-sm font-medium shrink-0"
         style={{ background: "var(--color-accent)", color: "var(--color-accent-ink)" }}
       >
         <Play size={13} fill="currentColor" />

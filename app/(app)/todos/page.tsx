@@ -19,7 +19,7 @@ export default async function TodosPage() {
 
       <TodoList todos={todos} />
 
-      <form action={createTodo} className="flex items-center gap-2 mt-5">
+      <form action={createTodo} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-5">
         <input
           type="text"
           name="title"
@@ -28,20 +28,22 @@ export default async function TodosPage() {
           className="flex-1 rounded-md px-3 py-2 text-sm border"
           style={{ borderColor: "var(--color-line)" }}
         />
-        <input
-          type="date"
-          name="deadline"
-          className="rounded-md px-3 py-2 text-sm border"
-          style={{ borderColor: "var(--color-line)" }}
-        />
-        <button
-          type="submit"
-          className="rounded-md p-2 shrink-0"
-          style={{ background: "var(--color-accent)", color: "var(--color-accent-ink)" }}
-          aria-label="Add task"
-        >
-          <Plus size={16} />
-        </button>
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            name="deadline"
+            className="flex-1 sm:flex-none rounded-md px-3 py-2 text-sm border"
+            style={{ borderColor: "var(--color-line)" }}
+          />
+          <button
+            type="submit"
+            className="rounded-md p-2 shrink-0"
+            style={{ background: "var(--color-accent)", color: "var(--color-accent-ink)" }}
+            aria-label="Add task"
+          >
+            <Plus size={16} />
+          </button>
+        </div>
       </form>
     </div>
   );

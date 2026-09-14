@@ -30,27 +30,29 @@ export default async function TimePage() {
               <div className="mb-3">
                 <DateHeading date={day.date} size="lg" />
               </div>
-              <table className="w-full text-sm">
-                <tbody>
-                  {day.entries.map((entry) => (
-                    <tr key={entry.id} className="border-b" style={{ borderColor: "var(--color-line)" }}>
-                      <td className="py-2.5 pr-3">{entry.title}</td>
-                      <td
-                        className="py-2.5 pr-3 text-right whitespace-nowrap"
-                        style={{ color: "var(--color-ink-muted)" }}
-                      >
-                        {formatTime(entry.start_time)} – {entry.end_time ? formatTime(entry.end_time) : "–"}
-                      </td>
-                      <td
-                        className="py-2.5 text-right whitespace-nowrap font-medium"
-                        style={{ color: "var(--color-accent)" }}
-                      >
-                        {entry.duration_seconds != null ? formatDuration(entry.duration_seconds) : "–"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                <table className="w-full text-sm min-w-[420px]">
+                  <tbody>
+                    {day.entries.map((entry) => (
+                      <tr key={entry.id} className="border-b" style={{ borderColor: "var(--color-line)" }}>
+                        <td className="py-2.5 pr-3">{entry.title}</td>
+                        <td
+                          className="py-2.5 pr-3 text-right whitespace-nowrap"
+                          style={{ color: "var(--color-ink-muted)" }}
+                        >
+                          {formatTime(entry.start_time)} – {entry.end_time ? formatTime(entry.end_time) : "–"}
+                        </td>
+                        <td
+                          className="py-2.5 text-right whitespace-nowrap font-medium"
+                          style={{ color: "var(--color-accent)" }}
+                        >
+                          {entry.duration_seconds != null ? formatDuration(entry.duration_seconds) : "–"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ))}
         </div>

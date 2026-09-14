@@ -44,7 +44,7 @@ export default async function JournalPage() {
         </summary>
         <form
           action={updateJournalSettings}
-          className="flex items-center gap-3 mt-3"
+          className="flex flex-wrap items-center gap-3 mt-3"
         >
           <label className="flex items-center gap-2">
             <Sun size={14} style={{ color: "var(--color-ink-faint)" }} />
@@ -80,7 +80,7 @@ export default async function JournalPage() {
         {allDays.map((day) => (
           <li
             key={day.date}
-            className="flex items-center justify-between gap-4 py-3.5 border-b"
+            className="flex flex-wrap items-center justify-between gap-3 py-3.5 border-b"
             style={{ borderColor: "var(--color-line)" }}
           >
             <DateHeading date={day.date} size="lg" />
