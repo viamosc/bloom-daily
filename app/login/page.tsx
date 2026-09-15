@@ -12,7 +12,7 @@ export default async function LoginPage({
   return (
     <main className="min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        <p className="font-display text-3xl mb-1">Almanac</p>
+        <p className="font-display text-3xl mb-1">Bloom Daily</p>
         <p className="text-sm mb-8" style={{ color: "var(--color-ink-muted)" }}>
           Routines, tasks, journal and time, kept in one place.
         </p>

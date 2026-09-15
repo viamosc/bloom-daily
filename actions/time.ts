@@ -10,13 +10,22 @@ export async function startTimeEntry(formData: FormData) {
 
   const sb = supabaseServer();
 
-  // Only one timer runs at a time; close any stray running entry first.
-  const { data: running } = await sb
-    .from("time_entries")
-    .select("id, start_time")
-    .is("end_time", null)
-    .maybeSingle();
+  // The lookup for a stray running entry and the insert of the new entry
+  // are independent — run them in parallel instead of one after another.
+  const [{ data: running }] = await Promise.all([
+    sb
+      .from("time_entries")
+      .select("id, start_time")
+      .is("end_time", null)
+      .maybeSingle(),
+    sb.from("time_entries").insert({
+      title,
+      entry_date: todayStr(),
+      start_time: new Date().toISOString(),
+    }),
+  ]);
 
+  // Only pay for a third round trip when there was actually something to close.
   if (running) {
     const end = new Date();
     const duration = Math.round(
@@ -27,12 +36,6 @@ export async function startTimeEntry(formData: FormData) {
       .update({ end_time: end.toISOString(), duration_seconds: Math.max(duration, 0) })
       .eq("id", running.id);
   }
-
-  await sb.from("time_entries").insert({
-    title,
-    entry_date: todayStr(),
-    start_time: new Date().toISOString(),
-  });
 
   revalidatePath("/time");
 }
