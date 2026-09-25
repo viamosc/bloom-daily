@@ -3,7 +3,7 @@ import { Sun, Moon, ArrowRight } from "lucide-react";
 import { getTodayRoutines } from "@/lib/data-routines";
 import { getJournalStreak, getJournalDays } from "@/lib/data-journal";
 import { getTodos } from "@/lib/data-todos";
-import { getRunningEntry } from "@/lib/data-time";
+import { getRunningEntries } from "@/lib/data-time";
 import { DateHeading } from "@/components/DateHeading";
 import { StreakStat } from "@/components/StreakStat";
 import { RoutineList } from "@/components/RoutineList";
@@ -18,7 +18,7 @@ export default async function TodayPage() {
     getJournalStreak(),
     getJournalDays(),
     getTodos(),
-    getRunningEntry(),
+    getRunningEntries(),
   ]);
 
   const todayJournal = journalDays.find((d) => d.date === today);
@@ -30,18 +30,22 @@ export default async function TodayPage() {
         <DateHeading date={today} size="lg" />
       </div>
 
-      {running && (
-        <div
-          className="rounded-md px-4 py-3 mb-8 text-sm flex items-center justify-between"
-          style={{ background: "var(--color-accent-soft)", color: "var(--color-accent)" }}
-        >
-          <span>Timing: {running.title}</span>
-          <Link href="/time" className="flex items-center gap-1 font-medium">
-            Open <ArrowRight size={13} />
-          </Link>
+      {running.length > 0 && (
+        <div className="mb-8 space-y-2">
+          {running.map((r) => (
+            <div
+              key={r.id}
+              className="rounded-md px-4 py-3 text-sm flex items-center justify-between"
+              style={{ background: "var(--color-accent-soft)", color: "var(--color-accent)" }}
+            >
+              <span>Timing: {r.title}</span>
+              <Link href="/time" className="flex items-center gap-1 font-medium">
+                Open <ArrowRight size={13} />
+              </Link>
+            </div>
+          ))}
         </div>
       )}
-
       <section className="mb-10">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-xl">Routines</h2>

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { TimeEntry } from "@/lib/data-time";
+import { useEffect, useState, useTransition } from "react";
+import type { TimeEntry, Category } from "@/lib/data-time";
+import { updateTimeEntry, deleteTimeEntry } from "@/actions/time";
 import { formatTime } from "@/lib/date";
 
 const HOUR_HEIGHT = 56; // px per hour
@@ -18,6 +19,11 @@ function hourLabel(hour: number) {
   let display = h % 12;
   if (display === 0) display = 12;
   return `${display} ${period}`;
+}
+
+function hhmm(iso: string) {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 type LaidOutEntry = TimeEntry & {
@@ -61,18 +67,31 @@ function layout(entries: TimeEntry[], nowMin: number): LaidOutEntry[] {
   return sorted.map((e) => ({ ...e, col: colOf.get(e.id) ?? 0, totalCols }));
 }
 
-export function DayTimetable({ entries, isToday }: { entries: TimeEntry[]; isToday: boolean }) {
-  // Re-render periodically so today's "now" line and any in-progress block stay current.
+export function DayTimetable({
+  entries,
+  isToday,
+  categories,
+}: {
+  entries: TimeEntry[];
+  isToday: boolean;
+  categories: Category[];
+}) {
   const [, setTick] = useState(0);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+
   useEffect(() => {
     if (!isToday) return;
     const id = setInterval(() => setTick((t) => t + 1), 30000);
     return () => clearInterval(id);
   }, [isToday]);
 
+  const catById = new Map(categories.map((c) => [c.id, c]));
+
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
   const laidOut = layout(entries, nowMin);
+  const editingEntry = laidOut.find((e) => e.id === editingId) ?? null;
 
   let rangeStartHour = 8;
   let rangeEndHour = 20;
@@ -101,7 +120,7 @@ export function DayTimetable({ entries, isToday }: { entries: TimeEntry[]; isTod
   const showNowLine = isToday && nowMin >= rangeStartHour * 60 && nowMin <= rangeEndHour * 60;
 
   return (
-    <div className="flex">
+    <div className="flex relative">
       <div className="shrink-0 pr-3" style={{ width: 52 }}>
         {hours.map((h) => (
           <div key={h} style={{ height: HOUR_HEIGHT }} className="relative">
@@ -145,23 +164,28 @@ export function DayTimetable({ entries, isToday }: { entries: TimeEntry[]; isTod
           const height = Math.max(topFor(e.endMin) - top, 20);
           const widthPct = 100 / e.totalCols;
           const leftPct = e.col * widthPct;
+          const cat = e.category_id ? catById.get(e.category_id) : null;
+          const color = cat?.color ?? "var(--color-accent)";
           return (
-            <div
+            <button
               key={e.id}
+              type="button"
+              onClick={() => setEditingId(e.id)}
               className="absolute rounded-md px-2 py-1 overflow-hidden text-left"
               style={{
                 top,
                 height,
                 left: `calc(${leftPct}% + 2px)`,
                 width: `calc(${widthPct}% - 4px)`,
-                background: e.ongoing ? "var(--color-accent-soft)" : "var(--color-surface)",
-                border: `1px solid ${e.ongoing ? "var(--color-accent)" : "var(--color-line)"}`,
+                background: e.ongoing ? color + "22" : "var(--color-surface)",
+                border: `1px solid ${e.ongoing ? color : "var(--color-line)"}`,
+                borderLeft: `3px solid ${color}`,
                 zIndex: 10,
               }}
             >
               <p
                 className="text-xs font-medium leading-tight truncate"
-                style={{ color: e.ongoing ? "var(--color-accent)" : "var(--color-ink)" }}
+                style={{ color: e.ongoing ? color : "var(--color-ink)" }}
               >
                 {e.title}
               </p>
@@ -170,10 +194,105 @@ export function DayTimetable({ entries, isToday }: { entries: TimeEntry[]; isTod
                   {formatTime(e.start_time)} – {e.ongoing ? "now" : formatTime(e.end_time as string)}
                 </p>
               )}
-            </div>
+            </button>
           );
         })}
       </div>
+
+      {editingEntry && (
+        <div
+          className="absolute inset-0 flex items-center justify-center z-30"
+          style={{ background: "rgba(0,0,0,0.25)" }}
+          onClick={() => setEditingId(null)}
+        >
+          <form
+            className="rounded-md p-4 w-full max-w-sm space-y-2"
+            style={{ background: "var(--color-surface)", border: "1px solid var(--color-line)" }}
+            onClick={(ev) => ev.stopPropagation()}
+            onSubmit={(ev) => {
+              ev.preventDefault();
+              const fd = new FormData(ev.currentTarget);
+              startTransition(() => updateTimeEntry(editingEntry.id, fd));
+              setEditingId(null);
+            }}
+          >
+            <input
+              type="text"
+              name="title"
+              defaultValue={editingEntry.title}
+              required
+              className="w-full rounded-md px-2.5 py-2 text-sm border"
+              style={{ borderColor: "var(--color-line)" }}
+            />
+            <select
+              name="category_id"
+              defaultValue={editingEntry.category_id ?? ""}
+              className="w-full rounded-md px-2.5 py-2 text-sm border"
+              style={{ borderColor: "var(--color-line)" }}
+            >
+              <option value="">No category</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <div className="flex gap-2">
+              <input
+                type="date"
+                name="entry_date"
+                defaultValue={editingEntry.entry_date}
+                className="flex-1 rounded-md px-2.5 py-2 text-sm border"
+                style={{ borderColor: "var(--color-line)" }}
+              />
+              <input
+                type="time"
+                name="start_time"
+                defaultValue={hhmm(editingEntry.start_time)}
+                className="flex-1 rounded-md px-2.5 py-2 text-sm border"
+                style={{ borderColor: "var(--color-line)" }}
+              />
+              <input
+                type="time"
+                name="end_time"
+                defaultValue={editingEntry.end_time ? hhmm(editingEntry.end_time) : ""}
+                className="flex-1 rounded-md px-2.5 py-2 text-sm border"
+                style={{ borderColor: "var(--color-line)" }}
+              />
+            </div>
+            <div className="flex justify-between pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  startTransition(() => deleteTimeEntry(editingEntry.id));
+                  setEditingId(null);
+                }}
+                className="text-sm font -medium"
+                style={{ color: "var(--color-rust)" }}
+              >
+                Delete
+              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingId(null)}
+                  className="text-sm px-3 py-1.5 rounded-md"
+                  style={{ color: "var(--color-ink-muted)" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="text-sm font-medium px-3 py-1.5 rounded-md"
+                  style={{ background: "var(--color-accent)", color: "var(--color-accent-ink)" }}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { getRunningEntry, getTimeEntriesByDate } from "@/lib/data-time";
+import { getRunningEntries, getTimeEntriesByDate, getCategories } from "@/lib/data-time";
 import { TimerControl } from "@/components/TimerControl";
 import { DateHeading } from "@/components/DateHeading";
 import { DayTimetable } from "@/components/Daytimetable";
@@ -7,7 +7,11 @@ import { formatDuration, todayStr } from "@/lib/date";
 export const dynamic = "force-dynamic";
 
 export default async function TimePage() {
-  const [running, days] = await Promise.all([getRunningEntry(), getTimeEntriesByDate()]);
+  const [running, days, categories] = await Promise.all([
+    getRunningEntries(),
+    getTimeEntriesByDate(),
+    getCategories(),
+  ]);
   const today = todayStr();
 
   return (
@@ -19,7 +23,7 @@ export default async function TimePage() {
         </p>
       </div>
 
-      <TimerControl running={running} />
+      <TimerControl running={running} categories={categories} />
 
       {days.length === 0 ? (
         <p className="text-sm" style={{ color: "var(--color-ink-muted)" }}>
@@ -44,7 +48,11 @@ export default async function TimePage() {
                 </div>
                 <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
                   <div className="min-w-[420px]">
-                    <DayTimetable entries={day.entries} isToday={day.date === today} />
+                    <DayTimetable
+                      entries={day.entries}
+                      isToday={day.date === today}
+                      categories={categories}
+                    />
                   </div>
                 </div>
               </div>

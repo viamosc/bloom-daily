@@ -1,5 +1,7 @@
 import { supabaseServer } from "./supabase";
 
+export type Category = { id: string; name: string; color: string };
+
 export type TimeEntry = {
   id: string;
   title: string;
@@ -7,19 +9,28 @@ export type TimeEntry = {
   start_time: string;
   end_time: string | null;
   duration_seconds: number | null;
+  category_id: string | null;
 };
 
-export async function getRunningEntry(): Promise<TimeEntry | null> {
+export async function getRunningEntries(): Promise<TimeEntry[]> {
   const sb = supabaseServer();
   const { data } = await sb
     .from("time_entries")
-    .select("id, title, entry_date, start_time, end_time, duration_seconds")
+    .select("id, title, entry_date, start_time, end_time, duration_seconds, category_id")
     .is("end_time", null)
-    .order("start_time", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order("start_time", { ascending: false });
 
-  return (data as TimeEntry) ?? null;
+  return (data as TimeEntry[]) ?? [];
+}
+
+export async function getCategories(): Promise<Category[]> {
+  const sb = supabaseServer();
+  const { data } = await sb
+    .from("categories")
+    .select("id, name, color")
+    .order("name");
+
+  return (data as Category[]) ?? [];
 }
 
 export async function getTimeEntriesByDate(): Promise<
@@ -28,7 +39,7 @@ export async function getTimeEntriesByDate(): Promise<
   const sb = supabaseServer();
   const { data } = await sb
     .from("time_entries")
-    .select("id, title, entry_date, start_time, end_time, duration_seconds")
+    .select("id, title, entry_date, start_time, end_time, duration_seconds, category_id")
     .not("end_time", "is", null)
     .order("entry_date", { ascending: false })
     .order("start_time", { ascending: true });
