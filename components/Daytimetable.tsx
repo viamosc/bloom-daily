@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import type { TimeEntry, Category } from "@/lib/data-time";
-import { updateTimeEntry, deleteTimeEntry } from "@/actions/time";
+import { updateTimeEntry, deleteTimeEntry, addManualEntry } from "@/actions/time";
 import { formatTime } from "@/lib/date";
 
 const HOUR_HEIGHT = 56; // px per hour
@@ -209,12 +209,27 @@ export function DayTimetable({
             className="rounded-md p-4 w-full max-w-sm space-y-2"
             style={{ background: "var(--color-surface)", border: "1px solid var(--color-line)" }}
             onClick={(ev) => ev.stopPropagation()}
-            onSubmit={(ev) => {
-              ev.preventDefault();
-              const fd = new FormData(ev.currentTarget);
-              startTransition(() => updateTimeEntry(editingEntry.id, fd));
-              setEditingId(null);
-            }}
+onSubmit={(ev) => {
+  ev.preventDefault();
+  const form = ev.currentTarget;
+  const fd = new FormData(form);
+
+  const date = fd.get("entry_date") as string;
+  const start = fd.get("start_time") as string;
+  const end = fd.get("end_time") as string;
+
+  // Converts local time in the browser to UTC ISO strings
+  if (date && start) {
+    fd.set("start_time", new Date(`${date}T${start}`).toISOString());
+  }
+  if (date && end) {
+    fd.set("end_time", new Date(`${date}T${end}`).toISOString());
+  }
+
+  // Call updateTimeEntry with the entry ID
+  startTransition(() => updateTimeEntry(editingEntry.id, fd));
+  setEditingId(null);
+}}
           >
             <input
               type="text"
