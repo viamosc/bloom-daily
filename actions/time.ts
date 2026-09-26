@@ -48,18 +48,27 @@ export async function addManualEntry(formData: FormData) {
   const title = String(formData.get("title") || "").trim();
   const categoryId = String(formData.get("category_id") || "") || null;
   const date = String(formData.get("entry_date") || todayStr());
-  const startIso = String(formData.get("start_time") || "");
-  const endIso = String(formData.get("end_time") || "");
+  const startRaw = String(formData.get("start_time") || "");
+  const endRaw = String(formData.get("end_time") || "");
 
-  if (!title || !startIso || !endIso) return;
+  if (!title || !startRaw || !endRaw) return;
 
-  const duration = Math.max(
-    Math.round((new Date(endIso).getTime() - new Date(startIso).getTime()) / 1000),
-    0
-  );
+  // Accept either a plain "HH:MM" (from a <input type="time">) or an
+  // already-full ISO string, and normalize both to ISO using entry_date.
+  const startIso = startRaw.includes("T") ? startRaw : new Date(`${date}T${startRaw}`).toISOString();
+  const endIso = endRaw.includes("T") ? endRaw : new Date(`${date}T${endRaw}`).toISOString();
+
+  const startMs = new Date(startIso).getTime();
+  const endMs = new Date(endIso).getTime();
+  if (Number.isNaN(startMs) || Number.isNaN(endMs)) {
+    console.error("addManualEntry: invalid start/end time", { startRaw, endRaw, date });
+    return;
+  }
+
+  const duration = Math.max(Math.round((endMs - startMs) / 1000), 0);
 
   const sb = supabaseServer();
-  await sb.from("time_entries").insert({
+  const { error } = await sb.from("time_entries").insert({
     title,
     entry_date: date,
     start_time: startIso,
@@ -67,6 +76,11 @@ export async function addManualEntry(formData: FormData) {
     duration_seconds: duration,
     category_id: categoryId,
   });
+
+  if (error) {
+    console.error("Failed to add manual entry:", error);
+    return;
+  }
 
   revalidatePath("/time");
 }
